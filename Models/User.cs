@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace StoreKeeper.Data.Models
 {
@@ -10,32 +11,31 @@ namespace StoreKeeper.Data.Models
         [Required, MaxLength(50)]
         public string Username { get; set; } = string.Empty;
 
-        // null = пароль не потрібен
         public string? PasswordHash { get; set; }
 
-        // Спеціальний прапор, який дає всі права (адмін)
         public bool IsAdmin { get; set; }
 
-        // Окремі дозволи (тільки якщо IsAdmin == false)
-        public bool CanViewProducts { get; set; }
-        public bool CanEditProducts { get; set; }
-        public bool CanDeleteProducts { get; set; }
+        public string? PermissionsList { get; set; }
 
-        public bool CanViewDishes { get; set; }
-        public bool CanEditDishes { get; set; }
-        public bool CanDeleteDishes { get; set; }
-
-        public bool CanCreateInvoices { get; set; }      // Прихід/розхід
-        public bool CanPrintInvoices { get; set; }
-
-        public bool CanManageRoles { get; set; }         // Керування ролями/користувачами
-        public bool CanViewLogs { get; set; }
-
-        // Метод перевірки права
-        public bool HasPermission(Func<User, bool> permissionCheck)
+        public bool HasPermission(string permission)
         {
             if (IsAdmin) return true;
-            return permissionCheck(this);
+            if (string.IsNullOrWhiteSpace(PermissionsList)) return false;
+            var permissions = PermissionsList.Split(',')
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p));
+            return permissions.Contains(permission);
+        }
+
+        public void SetPermissions(IEnumerable<string> permissions)
+        {
+            PermissionsList = string.Join(",", permissions.Where(p => !string.IsNullOrWhiteSpace(p)));
+        }
+
+        public string[] GetPermissionsArray()
+        {
+            if (string.IsNullOrWhiteSpace(PermissionsList)) return new string[0];
+            return PermissionsList.Split(',').Select(p => p.Trim()).ToArray();
         }
     }
 }

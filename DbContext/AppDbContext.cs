@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreKeeper.Data.Models;
-using System.Reflection.Emit;
 
 namespace StoreKeeper.Data.DbContext
 {
@@ -30,16 +29,7 @@ namespace StoreKeeper.Data.DbContext
                     Username = "Адміністратор",
                     PasswordHash = null,
                     IsAdmin = true,
-                    CanViewProducts = true,
-                    CanEditProducts = true,
-                    CanDeleteProducts = true,
-                    CanViewDishes = true,
-                    CanEditDishes = true,
-                    CanDeleteDishes = true,
-                    CanCreateInvoices = true,
-                    CanPrintInvoices = true,
-                    CanManageRoles = true,
-                    CanViewLogs = true
+                    PermissionsList = null
                 };
                 context.Users.Add(admin);
                 context.SaveChanges();

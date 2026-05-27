@@ -11,6 +11,7 @@ namespace StoreKeeper.WinForms.Forms
     {
         private AppDbContext _context;
         private User? _selectedUser;
+        private const string ConnectionString = "Data Source=users.list";
 
         public LoginForm()
         {
@@ -21,10 +22,10 @@ namespace StoreKeeper.WinForms.Forms
         private void LoadUsers()
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(ConfigHelper.GetConnectionString())
+                .UseSqlite(ConnectionString)
                 .Options;
             _context = new AppDbContext(options);
-            AppDbContext.InitializeDatabase(_context); // гарантує наявність адміна
+            AppDbContext.InitializeDatabase(_context);
 
             var users = _context.Users.OrderBy(u => u.Username).ToList();
             comboBoxUsers.DataSource = users;
@@ -39,14 +40,6 @@ namespace StoreKeeper.WinForms.Forms
         {
             _selectedUser = comboBoxUsers.SelectedItem as User;
             textBoxPassword.Text = "";
-            if (_selectedUser != null && string.IsNullOrEmpty(_selectedUser.PasswordHash))
-            {
-                textBoxPassword.PlaceholderText = "(пароль не потрібен)";
-            }
-            else
-            {
-                textBoxPassword.PlaceholderText = "Введіть пароль";
-            }
         }
 
         private void buttonLogin_Click(object sender, EventArgs e)
@@ -57,6 +50,7 @@ namespace StoreKeeper.WinForms.Forms
                 return;
             }
 
+            // Перевірка пароля
             if (!string.IsNullOrEmpty(_selectedUser.PasswordHash))
             {
                 string inputPassword = textBoxPassword.Text;
@@ -69,20 +63,42 @@ namespace StoreKeeper.WinForms.Forms
             }
             else
             {
-                if (_selectedUser.IsAdmin && string.IsNullOrEmpty(_selectedUser.PasswordHash))
+                // Якщо немає пароля – пропонуємо встановити (тільки для адміна)
+                if (_selectedUser.IsAdmin)
                 {
                     var result = MessageBox.Show(
-                        "Ви увійшли як Адміністратор без пароля. Бажаєте встановити пароль зараз?",
+                        "У профілю немає пароля. Бажаєте встановити пароль зараз?",
                         "Безпека",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
-                        SetAdminPassword();
-                        LoadUsers();
-                        comboBoxUsers.SelectedValue = _selectedUser.Id;
-                        return;
+                        using (var pwdForm = new SetPasswordForm(_selectedUser, hash =>
+                        {
+                            _selectedUser.PasswordHash = hash;
+                            _context.SaveChanges();
+                        }))
+                        {
+                            if (pwdForm.ShowDialog() == DialogResult.OK)
+                            {
+                                MessageBox.Show("Пароль встановлено. Тепер увійдіть знову.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                LoadUsers(); // оновити список
+                                comboBoxUsers.SelectedValue = _selectedUser.Id;
+                                return;
+                            }
+                            else
+                                return; // не входимо без пароля
+                        }
                     }
+                    else
+                    {
+                        // Дозволяємо вхід без пароля для адміна, якщо він відмовився
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Профіль не має пароля. Зверніться до адміністратора.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
             }
 
@@ -90,33 +106,6 @@ namespace StoreKeeper.WinForms.Forms
             var mainForm = new MainForm(_selectedUser, _context);
             mainForm.FormClosed += (s, args) => this.Close();
             mainForm.Show();
-        }
-
-        private void SetAdminPassword()
-        {
-            using (var dialog = new Form())
-            {
-                dialog.Text = "Встановлення пароля адміністратора";
-                dialog.Width = 300;
-                dialog.Height = 150;
-                var txtPassword = new TextBox() { PasswordChar = '*', Location = new System.Drawing.Point(20, 20), Width = 240 };
-                var txtConfirm = new TextBox() { PasswordChar = '*', Location = new System.Drawing.Point(20, 50), Width = 240 };
-                var btnOk = new Button() { Text = "OK", Location = new System.Drawing.Point(100, 80), DialogResult = DialogResult.OK };
-                dialog.Controls.Add(txtPassword);
-                dialog.Controls.Add(txtConfirm);
-                dialog.Controls.Add(btnOk);
-
-                if (dialog.ShowDialog() == DialogResult.OK && txtPassword.Text == txtConfirm.Text && !string.IsNullOrEmpty(txtPassword.Text))
-                {
-                    _selectedUser.PasswordHash = HashHelper.ComputeSha256Hash(txtPassword.Text);
-                    _context.SaveChanges();
-                    MessageBox.Show("Пароль встановлено!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Пароль не співпадає або порожній. Спробуйте пізніше.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
         }
     }
 }
