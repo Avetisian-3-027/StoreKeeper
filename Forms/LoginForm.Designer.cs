@@ -28,17 +28,17 @@
             // labelProfile
             // 
             labelProfile.AutoSize = true;
-            labelProfile.Font = new Font("Segoe UI", 12F);
-            labelProfile.Location = new Point(15, 32);
+            labelProfile.Font = new Font("Segoe UI", 9F);
+            labelProfile.Location = new Point(18, 36);
             labelProfile.Name = "labelProfile";
-            labelProfile.Size = new Size(94, 28);
+            labelProfile.Size = new Size(71, 20);
             labelProfile.TabIndex = 0;
             labelProfile.Text = "Профіль:";
             // 
             // comboBoxUsers
             // 
             comboBoxUsers.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBoxUsers.Location = new Point(115, 32);
+            comboBoxUsers.Location = new Point(95, 33);
             comboBoxUsers.Name = "comboBoxUsers";
             comboBoxUsers.Size = new Size(180, 28);
             comboBoxUsers.TabIndex = 1;
@@ -47,16 +47,16 @@
             // labelPassword
             // 
             labelPassword.AutoSize = true;
-            labelPassword.Font = new Font("Segoe UI", 12F);
-            labelPassword.Location = new Point(20, 88);
+            labelPassword.Font = new Font("Segoe UI", 9F);
+            labelPassword.Location = new Point(23, 92);
             labelPassword.Name = "labelPassword";
-            labelPassword.Size = new Size(85, 28);
+            labelPassword.Size = new Size(65, 20);
             labelPassword.TabIndex = 2;
             labelPassword.Text = "Пароль:";
             // 
             // textBoxPassword
             // 
-            textBoxPassword.Location = new Point(115, 89);
+            textBoxPassword.Location = new Point(95, 90);
             textBoxPassword.Name = "textBoxPassword";
             textBoxPassword.Size = new Size(180, 27);
             textBoxPassword.TabIndex = 3;
@@ -64,10 +64,10 @@
             // 
             // buttonLogin
             // 
-            buttonLogin.Font = new Font("Segoe UI", 12F);
-            buttonLogin.Location = new Point(115, 149);
+            buttonLogin.Font = new Font("Segoe UI", 9F);
+            buttonLogin.Location = new Point(95, 143);
             buttonLogin.Name = "buttonLogin";
-            buttonLogin.Size = new Size(180, 41);
+            buttonLogin.Size = new Size(180, 33);
             buttonLogin.TabIndex = 4;
             buttonLogin.Text = "Увійти";
             buttonLogin.Click += buttonLogin_Click;
@@ -76,7 +76,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(343, 221);
+            ClientSize = new Size(298, 209);
             Controls.Add(labelProfile);
             Controls.Add(comboBoxUsers);
             Controls.Add(labelPassword);

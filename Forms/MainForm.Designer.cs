@@ -26,16 +26,16 @@
         private void InitializeComponent()
         {
             menuStrip = new MenuStrip();
-            довідникиToolStripMenuItem = new ToolStripMenuItem();
-            товариToolStripMenuItem = new ToolStripMenuItem();
-            стравиToolStripMenuItem = new ToolStripMenuItem();
+            адмініструванняToolStripMenuItem = new ToolStripMenuItem();
+            користувачіToolStripMenuItem = new ToolStripMenuItem();
             складToolStripMenuItem = new ToolStripMenuItem();
             прихідToolStripMenuItem = new ToolStripMenuItem();
             розхідToolStripMenuItem = new ToolStripMenuItem();
             звітиToolStripMenuItem = new ToolStripMenuItem();
             залишкиToolStripMenuItem = new ToolStripMenuItem();
-            адмініструванняToolStripMenuItem = new ToolStripMenuItem();
-            користувачіToolStripMenuItem = new ToolStripMenuItem();
+            довідникиToolStripMenuItem = new ToolStripMenuItem();
+            товариToolStripMenuItem = new ToolStripMenuItem();
+            стравиToolStripMenuItem = new ToolStripMenuItem();
             вихідToolStripMenuItem = new ToolStripMenuItem();
             menuStrip.SuspendLayout();
             SuspendLayout();
@@ -46,30 +46,23 @@
             menuStrip.Items.AddRange(new ToolStripItem[] { адмініструванняToolStripMenuItem, складToolStripMenuItem, звітиToolStripMenuItem, довідникиToolStripMenuItem, вихідToolStripMenuItem });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
-            menuStrip.Size = new Size(800, 28);
+            menuStrip.Size = new Size(1006, 28);
             menuStrip.TabIndex = 0;
             menuStrip.Text = "menuStrip";
             // 
-            // довідникиToolStripMenuItem
+            // адмініструванняToolStripMenuItem
             // 
-            довідникиToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { товариToolStripMenuItem, стравиToolStripMenuItem });
-            довідникиToolStripMenuItem.Name = "довідникиToolStripMenuItem";
-            довідникиToolStripMenuItem.Size = new Size(96, 24);
-            довідникиToolStripMenuItem.Text = "Довідники";
+            адмініструванняToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { користувачіToolStripMenuItem });
+            адмініструванняToolStripMenuItem.Name = "адмініструванняToolStripMenuItem";
+            адмініструванняToolStripMenuItem.Size = new Size(140, 24);
+            адмініструванняToolStripMenuItem.Text = "Адміністрування";
             // 
-            // товариToolStripMenuItem
+            // користувачіToolStripMenuItem
             // 
-            товариToolStripMenuItem.Name = "товариToolStripMenuItem";
-            товариToolStripMenuItem.Size = new Size(224, 26);
-            товариToolStripMenuItem.Text = "Товари";
-            товариToolStripMenuItem.Click += товариToolStripMenuItem_Click;
-            // 
-            // стравиToolStripMenuItem
-            // 
-            стравиToolStripMenuItem.Name = "стравиToolStripMenuItem";
-            стравиToolStripMenuItem.Size = new Size(224, 26);
-            стравиToolStripMenuItem.Text = "Страви";
-            стравиToolStripMenuItem.Click += стравиToolStripMenuItem_Click;
+            користувачіToolStripMenuItem.Name = "користувачіToolStripMenuItem";
+            користувачіToolStripMenuItem.Size = new Size(185, 26);
+            користувачіToolStripMenuItem.Text = "Користувачі...";
+            користувачіToolStripMenuItem.Click += користувачіToolStripMenuItem_Click;
             // 
             // складToolStripMenuItem
             // 
@@ -81,14 +74,14 @@
             // прихідToolStripMenuItem
             // 
             прихідToolStripMenuItem.Name = "прихідToolStripMenuItem";
-            прихідToolStripMenuItem.Size = new Size(224, 26);
+            прихідToolStripMenuItem.Size = new Size(191, 26);
             прихідToolStripMenuItem.Text = "Прихід товару";
             прихідToolStripMenuItem.Click += прихідToolStripMenuItem_Click;
             // 
             // розхідToolStripMenuItem
             // 
             розхідToolStripMenuItem.Name = "розхідToolStripMenuItem";
-            розхідToolStripMenuItem.Size = new Size(224, 26);
+            розхідToolStripMenuItem.Size = new Size(191, 26);
             розхідToolStripMenuItem.Text = "Розхід товару";
             розхідToolStripMenuItem.Click += розхідToolStripMenuItem_Click;
             // 
@@ -102,23 +95,30 @@
             // залишкиToolStripMenuItem
             // 
             залишкиToolStripMenuItem.Name = "залишкиToolStripMenuItem";
-            залишкиToolStripMenuItem.Size = new Size(224, 26);
+            залишкиToolStripMenuItem.Size = new Size(209, 26);
             залишкиToolStripMenuItem.Text = "Залишки товарів";
             залишкиToolStripMenuItem.Click += залишкиToolStripMenuItem_Click;
             // 
-            // адмініструванняToolStripMenuItem
+            // довідникиToolStripMenuItem
             // 
-            адмініструванняToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { користувачіToolStripMenuItem });
-            адмініструванняToolStripMenuItem.Name = "адмініструванняToolStripMenuItem";
-            адмініструванняToolStripMenuItem.Size = new Size(140, 24);
-            адмініструванняToolStripMenuItem.Text = "Адміністрування";
+            довідникиToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { товариToolStripMenuItem, стравиToolStripMenuItem });
+            довідникиToolStripMenuItem.Name = "довідникиToolStripMenuItem";
+            довідникиToolStripMenuItem.Size = new Size(96, 24);
+            довідникиToolStripMenuItem.Text = "Довідники";
             // 
-            // користувачіToolStripMenuItem
+            // товариToolStripMenuItem
             // 
-            користувачіToolStripMenuItem.Name = "користувачіToolStripMenuItem";
-            користувачіToolStripMenuItem.Size = new Size(224, 26);
-            користувачіToolStripMenuItem.Text = "Користувачі...";
-            користувачіToolStripMenuItem.Click += користувачіToolStripMenuItem_Click;
+            товариToolStripMenuItem.Name = "товариToolStripMenuItem";
+            товариToolStripMenuItem.Size = new Size(143, 26);
+            товариToolStripMenuItem.Text = "Товари";
+            товариToolStripMenuItem.Click += товариToolStripMenuItem_Click;
+            // 
+            // стравиToolStripMenuItem
+            // 
+            стравиToolStripMenuItem.Name = "стравиToolStripMenuItem";
+            стравиToolStripMenuItem.Size = new Size(143, 26);
+            стравиToolStripMenuItem.Text = "Страви";
+            стравиToolStripMenuItem.Click += стравиToolStripMenuItem_Click;
             // 
             // вихідToolStripMenuItem
             // 
@@ -131,10 +131,12 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1006, 721);
             Controls.Add(menuStrip);
             MainMenuStrip = menuStrip;
+            MinimumSize = new Size(1024, 768);
             Name = "MainForm";
+            SizeGripStyle = SizeGripStyle.Show;
             Text = "Головна форма";
             menuStrip.ResumeLayout(false);
             menuStrip.PerformLayout();

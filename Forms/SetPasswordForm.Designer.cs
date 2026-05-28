@@ -32,67 +32,67 @@
             // labelUser
             // 
             labelUser.AutoSize = true;
-            labelUser.Font = new Font("Segoe UI", 12F);
-            labelUser.Location = new Point(12, 19);
+            labelUser.Font = new Font("Segoe UI", 9F);
+            labelUser.Location = new Point(12, 9);
             labelUser.Name = "labelUser";
-            labelUser.Size = new Size(253, 28);
+            labelUser.Size = new Size(193, 20);
             labelUser.TabIndex = 0;
             labelUser.Text = "Встановлення пароля для:";
             // 
             // labelPassword
             // 
             labelPassword.AutoSize = true;
-            labelPassword.Font = new Font("Segoe UI", 12F);
-            labelPassword.Location = new Point(52, 60);
+            labelPassword.Font = new Font("Segoe UI", 9F);
+            labelPassword.Location = new Point(12, 47);
             labelPassword.Name = "labelPassword";
-            labelPassword.Size = new Size(149, 28);
+            labelPassword.Size = new Size(113, 20);
             labelPassword.TabIndex = 1;
             labelPassword.Text = "Новий пароль:";
             // 
             // textBoxPassword
             // 
-            textBoxPassword.Location = new Point(246, 60);
+            textBoxPassword.Location = new Point(141, 44);
             textBoxPassword.Name = "textBoxPassword";
-            textBoxPassword.Size = new Size(180, 27);
+            textBoxPassword.Size = new Size(166, 27);
             textBoxPassword.TabIndex = 2;
             textBoxPassword.UseSystemPasswordChar = true;
             // 
             // labelConfirm
             // 
             labelConfirm.AutoSize = true;
-            labelConfirm.Font = new Font("Segoe UI", 12F);
-            labelConfirm.Location = new Point(52, 100);
+            labelConfirm.Font = new Font("Segoe UI", 9F);
+            labelConfirm.Location = new Point(12, 92);
             labelConfirm.Name = "labelConfirm";
-            labelConfirm.Size = new Size(157, 28);
+            labelConfirm.Size = new Size(119, 20);
             labelConfirm.TabIndex = 3;
             labelConfirm.Text = "Підтвердження:";
             // 
             // textBoxConfirm
             // 
-            textBoxConfirm.Location = new Point(246, 101);
+            textBoxConfirm.Location = new Point(141, 89);
             textBoxConfirm.Name = "textBoxConfirm";
-            textBoxConfirm.Size = new Size(180, 27);
+            textBoxConfirm.Size = new Size(166, 27);
             textBoxConfirm.TabIndex = 4;
             textBoxConfirm.UseSystemPasswordChar = true;
             // 
             // buttonSet
             // 
-            buttonSet.Font = new Font("Segoe UI", 12F);
+            buttonSet.Font = new Font("Segoe UI", 9F);
             buttonSet.ForeColor = SystemColors.ActiveCaptionText;
-            buttonSet.Location = new Point(52, 160);
+            buttonSet.Location = new Point(37, 137);
             buttonSet.Name = "buttonSet";
-            buttonSet.Size = new Size(180, 42);
+            buttonSet.Size = new Size(115, 34);
             buttonSet.TabIndex = 5;
             buttonSet.Text = "Встановити";
             buttonSet.Click += buttonSet_Click;
             // 
             // buttonCancel
             // 
-            buttonCancel.Font = new Font("Segoe UI", 12F);
+            buttonCancel.Font = new Font("Segoe UI", 9F);
             buttonCancel.ForeColor = SystemColors.ControlDarkDark;
-            buttonCancel.Location = new Point(246, 160);
+            buttonCancel.Location = new Point(168, 137);
             buttonCancel.Name = "buttonCancel";
-            buttonCancel.Size = new Size(180, 42);
+            buttonCancel.Size = new Size(124, 34);
             buttonCancel.TabIndex = 6;
             buttonCancel.Text = "Скасувати";
             buttonCancel.Click += buttonCancel_Click;
@@ -101,7 +101,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(476, 225);
+            ClientSize = new Size(342, 201);
             Controls.Add(labelUser);
             Controls.Add(labelPassword);
             Controls.Add(textBoxPassword);

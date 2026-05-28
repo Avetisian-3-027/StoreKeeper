@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using Microsoft.EntityFrameworkCore;
 using StoreKeeper.Data.DbContext;
 using StoreKeeper.Data.Models;
+using StoreKeeper.Helpers;
 
 namespace StoreKeeper.WinForms.Forms
 {

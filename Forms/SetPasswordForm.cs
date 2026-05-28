@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using StoreKeeper.Data.Models;
+using StoreKeeper.Helpers;
 
 namespace StoreKeeper.WinForms.Forms
 {
