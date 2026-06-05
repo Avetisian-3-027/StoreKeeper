@@ -1,11 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreKeeper.Data.DbContext;
-using StoreKeeper.Data.Models;
 using StoreKeeper.Data.Models.Work;
 using StoreKeeper.Data.Permissions;
-using System;
-using System.Linq;
-using System.Windows.Forms;
+using StoreKeeper.Data.Models;
 
 namespace StoreKeeper.WinForms.Forms
 {
@@ -40,7 +37,6 @@ namespace StoreKeeper.WinForms.Forms
             {
                 Name = "ProductName",
                 HeaderText = "Продукт",
-                DataPropertyName = "Product.Name",
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
                 ReadOnly = true
             });
@@ -58,7 +54,7 @@ namespace StoreKeeper.WinForms.Forms
                 Name = "StartDate",
                 HeaderText = "Діє з",
                 DataPropertyName = "StartDate",
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM.yyyy" },
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM" },
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
                 ReadOnly = true
             });
@@ -67,23 +63,20 @@ namespace StoreKeeper.WinForms.Forms
                 Name = "EndDate",
                 HeaderText = "Діє до",
                 DataPropertyName = "EndDate",
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM.yyyy" },
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM" },
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
                 ReadOnly = true
             });
 
             dataGridViewIngredients.DataSource = ingredients;
-
-            // Прив'язка для колонки ProductName потребує спеціальної обробки, якщо DataPropertyName="Product.Name" не працює,
-            // тому краще використати CellFormatting. Додамо обробник.
             dataGridViewIngredients.CellFormatting += (s, e) =>
             {
                 if (e.RowIndex < 0) return;
-                var ing = dataGridViewIngredients.Rows[e.RowIndex].DataBoundItem as DishIngredient;
-                if (ing == null) return;
+                var ingredient = dataGridViewIngredients.Rows[e.RowIndex].DataBoundItem as DishIngredient;
+                if (ingredient == null) return;
                 if (dataGridViewIngredients.Columns[e.ColumnIndex].Name == "ProductName")
                 {
-                    e.Value = ing.Product?.Name;
+                    e.Value = ingredient.Product?.Name;
                     e.FormattingApplied = true;
                 }
             };
