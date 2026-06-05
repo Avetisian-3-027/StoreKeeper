@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoreKeeper.Data.DbContext;
-using StoreKeeper.Data.Models;
 using StoreKeeper.Data.Models.Work;
+using StoreKeeper.Data.Models;
 using StoreKeeper.WinForms.Services;
 
 namespace StoreKeeper.WinForms.Forms
@@ -24,12 +24,12 @@ namespace StoreKeeper.WinForms.Forms
             _itemsBindingSource = new BindingSource { DataSource = _items };
             dataGridViewItems.DataSource = _itemsBindingSource;
             Text = invoiceType == 1 ? "Прихідна накладна" : "Видаткова накладна";
+
             LoadProductsAndDishes();
             ConfigureDataGridView();
             UpdateDeleteButtonState();
 
-            // Налаштування видимості залежно від типу
-            if (_invoiceType == 1) // прихід
+            if (_invoiceType == 1)
             {
                 labelSupplier.Visible = true;
                 textBoxSupplier.Visible = true;
@@ -37,7 +37,7 @@ namespace StoreKeeper.WinForms.Forms
                 labelPrice.Visible = true;
                 numericUpDownPrice.Visible = true;
             }
-            else // розхід
+            else
             {
                 labelSupplier.Visible = false;
                 textBoxSupplier.Visible = false;
@@ -100,11 +100,13 @@ namespace StoreKeeper.WinForms.Forms
             comboBoxProduct.DataSource = products;
             comboBoxProduct.DisplayMember = "Name";
             comboBoxProduct.ValueMember = "Id";
+            comboBoxProduct.DropDownStyle = ComboBoxStyle.DropDownList;
 
             var dishes = _context.Dishes.OrderBy(d => d.Name).ToList();
             comboBoxDish.DataSource = dishes;
             comboBoxDish.DisplayMember = "Name";
             comboBoxDish.ValueMember = "Id";
+            comboBoxDish.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         private void RefreshDataGridView()
@@ -178,20 +180,40 @@ namespace StoreKeeper.WinForms.Forms
             }
 
             DateTime currentDate = dateTimePickerDate.Value;
-            var ingredients = _context.DishIngredients
+            // Отримуємо всі інгредієнти страви разом з продуктами
+            var allIngredients = _context.DishIngredients
                 .Include(di => di.Product)
-                .Where(di => di.DishId == dish.Id &&
-                    (di.StartDate == null || di.StartDate <= currentDate) &&
-                    (di.EndDate == null || di.EndDate >= currentDate))
+                .Where(di => di.DishId == dish.Id)
                 .ToList();
 
-            if (ingredients.Count == 0)
+            // Групуємо за продуктом
+            var ingredientsByProduct = allIngredients.GroupBy(di => di.ProductId);
+            var activeIngredients = new List<DishIngredient>();
+
+            foreach (var group in ingredientsByProduct)
+            {
+                // Шукаємо інгредієнт з періодом, що покриває поточну дату (використовуємо IsDateInRange)
+                var withPeriod = group.FirstOrDefault(di => di.StartDate.HasValue && di.EndDate.HasValue && di.IsDateInRange(currentDate));
+                if (withPeriod != null)
+                {
+                    activeIngredients.Add(withPeriod);
+                }
+                else
+                {
+                    // Якщо немає періодичного, беремо глобальний (без періоду)
+                    var global = group.FirstOrDefault(di => !di.StartDate.HasValue && !di.EndDate.HasValue);
+                    if (global != null)
+                        activeIngredients.Add(global);
+                }
+            }
+
+            if (activeIngredients.Count == 0)
             {
                 MessageBox.Show("Для обраної страви немає активних інгредієнтів на вказану дату.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            foreach (var ing in ingredients)
+            foreach (var ing in activeIngredients)
             {
                 decimal totalGrams = ing.GramsBrutto * portions;
                 decimal totalKg = totalGrams / 1000m;
@@ -284,12 +306,12 @@ namespace StoreKeeper.WinForms.Forms
                 var product = _context.Products.Find(item.ProductId);
                 if (product != null)
                 {
-                    if (_invoiceType == 1) // прихід
+                    if (_invoiceType == 1)
                     {
                         product.Quantity += item.Quantity;
-                        product.PricePerKg = item.PricePerKg; // оновлюємо ціну товару
+                        product.PricePerKg = item.PricePerKg;
                     }
-                    else // розхід
+                    else
                     {
                         if (product.Quantity < item.Quantity)
                         {

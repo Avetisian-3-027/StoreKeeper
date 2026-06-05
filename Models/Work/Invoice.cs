@@ -22,7 +22,7 @@ namespace StoreKeeper.Data.Models.Work
         public string? Comment { get; set; }
 
         [MaxLength(200)]
-        public string? Supplier { get; set; } // Постачальник (тільки для приходу)
+        public string? Supplier { get; set; }
 
         public int? UserId { get; set; }
 

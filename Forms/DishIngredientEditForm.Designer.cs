@@ -7,9 +7,10 @@
         private System.Windows.Forms.ComboBox comboBoxProduct;
         private System.Windows.Forms.Label labelGrams;
         private System.Windows.Forms.NumericUpDown numericUpDownGrams;
-        private System.Windows.Forms.CheckBox checkBoxStartDate;
+        private System.Windows.Forms.CheckBox checkBoxPeriod;
+        private System.Windows.Forms.Label labelFrom;
+        private System.Windows.Forms.Label labelTo;
         private System.Windows.Forms.DateTimePicker dateTimePickerStart;
-        private System.Windows.Forms.CheckBox checkBoxEndDate;
         private System.Windows.Forms.DateTimePicker dateTimePickerEnd;
         private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.Button buttonCancel;
@@ -27,9 +28,10 @@
             comboBoxProduct = new ComboBox();
             labelGrams = new Label();
             numericUpDownGrams = new NumericUpDown();
-            checkBoxStartDate = new CheckBox();
+            checkBoxPeriod = new CheckBox();
+            labelFrom = new Label();
+            labelTo = new Label();
             dateTimePickerStart = new DateTimePicker();
-            checkBoxEndDate = new CheckBox();
             dateTimePickerEnd = new DateTimePicker();
             buttonSave = new Button();
             buttonCancel = new Button();
@@ -39,7 +41,7 @@
             // labelProduct
             // 
             labelProduct.AutoSize = true;
-            labelProduct.Location = new Point(20, 25);
+            labelProduct.Location = new Point(20, 20);
             labelProduct.Name = "labelProduct";
             labelProduct.Size = new Size(69, 20);
             labelProduct.TabIndex = 0;
@@ -48,15 +50,15 @@
             // comboBoxProduct
             // 
             comboBoxProduct.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBoxProduct.Location = new Point(142, 22);
+            comboBoxProduct.Location = new Point(142, 17);
             comboBoxProduct.Name = "comboBoxProduct";
-            comboBoxProduct.Size = new Size(286, 28);
+            comboBoxProduct.Size = new Size(288, 28);
             comboBoxProduct.TabIndex = 1;
             // 
             // labelGrams
             // 
             labelGrams.AutoSize = true;
-            labelGrams.Location = new Point(20, 65);
+            labelGrams.Location = new Point(20, 60);
             labelGrams.Name = "labelGrams";
             labelGrams.Size = new Size(116, 20);
             labelGrams.TabIndex = 2;
@@ -66,61 +68,75 @@
             // 
             numericUpDownGrams.DecimalPlaces = 1;
             numericUpDownGrams.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            numericUpDownGrams.Location = new Point(142, 63);
+            numericUpDownGrams.Location = new Point(142, 58);
             numericUpDownGrams.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
-            numericUpDownGrams.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             numericUpDownGrams.Name = "numericUpDownGrams";
-            numericUpDownGrams.Size = new Size(100, 27);
+            numericUpDownGrams.Size = new Size(120, 27);
             numericUpDownGrams.TabIndex = 2;
             numericUpDownGrams.Value = new decimal(new int[] { 1, 0, 0, 65536 });
             // 
-            // checkBoxStartDate
+            // checkBoxPeriod
             // 
-            checkBoxStartDate.AutoSize = true;
-            checkBoxStartDate.Location = new Point(23, 102);
-            checkBoxStartDate.Name = "checkBoxStartDate";
-            checkBoxStartDate.Size = new Size(66, 24);
-            checkBoxStartDate.TabIndex = 3;
-            checkBoxStartDate.Text = "Діє з:";
+            checkBoxPeriod.AutoSize = true;
+            checkBoxPeriod.Location = new Point(20, 103);
+            checkBoxPeriod.Name = "checkBoxPeriod";
+            checkBoxPeriod.Size = new Size(118, 24);
+            checkBoxPeriod.TabIndex = 3;
+            checkBoxPeriod.Text = "Діє в період:";
+            checkBoxPeriod.UseVisualStyleBackColor = true;
+            checkBoxPeriod.CheckedChanged += checkBoxPeriod_CheckedChanged;
+            // 
+            // labelFrom
+            // 
+            labelFrom.AutoSize = true;
+            labelFrom.Location = new Point(130, 130);
+            labelFrom.Name = "labelFrom";
+            labelFrom.Size = new Size(16, 20);
+            labelFrom.TabIndex = 4;
+            labelFrom.Text = "з";
+            labelFrom.Visible = false;
+            // 
+            // labelTo
+            // 
+            labelTo.AutoSize = true;
+            labelTo.Location = new Point(280, 130);
+            labelTo.Name = "labelTo";
+            labelTo.Size = new Size(26, 20);
+            labelTo.TabIndex = 6;
+            labelTo.Text = "до";
+            labelTo.Visible = false;
             // 
             // dateTimePickerStart
             // 
-            dateTimePickerStart.Location = new Point(142, 102);
+            dateTimePickerStart.Location = new Point(150, 127);
             dateTimePickerStart.Name = "dateTimePickerStart";
-            dateTimePickerStart.Size = new Size(180, 27);
-            dateTimePickerStart.TabIndex = 4;
-            // 
-            // checkBoxEndDate
-            // 
-            checkBoxEndDate.AutoSize = true;
-            checkBoxEndDate.Location = new Point(23, 142);
-            checkBoxEndDate.Name = "checkBoxEndDate";
-            checkBoxEndDate.Size = new Size(76, 24);
-            checkBoxEndDate.TabIndex = 5;
-            checkBoxEndDate.Text = "Діє до:";
+            dateTimePickerStart.Size = new Size(120, 27);
+            dateTimePickerStart.TabIndex = 5;
+            dateTimePickerStart.Visible = false;
             // 
             // dateTimePickerEnd
             // 
-            dateTimePickerEnd.Location = new Point(142, 142);
+            dateTimePickerEnd.Location = new Point(310, 127);
             dateTimePickerEnd.Name = "dateTimePickerEnd";
-            dateTimePickerEnd.Size = new Size(180, 27);
-            dateTimePickerEnd.TabIndex = 6;
+            dateTimePickerEnd.Size = new Size(120, 27);
+            dateTimePickerEnd.TabIndex = 7;
+            dateTimePickerEnd.Visible = false;
             // 
             // buttonSave
             // 
-            buttonSave.Location = new Point(250, 200);
+            buttonSave.Location = new Point(206, 178);
             buttonSave.Name = "buttonSave";
             buttonSave.Size = new Size(100, 40);
-            buttonSave.TabIndex = 7;
+            buttonSave.TabIndex = 8;
             buttonSave.Text = "Зберегти";
             buttonSave.Click += buttonSave_Click;
             // 
             // buttonCancel
             // 
-            buttonCancel.Location = new Point(370, 200);
+            buttonCancel.Location = new Point(330, 178);
             buttonCancel.Name = "buttonCancel";
             buttonCancel.Size = new Size(100, 40);
-            buttonCancel.TabIndex = 8;
+            buttonCancel.TabIndex = 9;
             buttonCancel.Text = "Скасувати";
             buttonCancel.Click += buttonCancel_Click;
             // 
@@ -128,14 +144,15 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(500, 270);
+            ClientSize = new Size(500, 230);
             Controls.Add(labelProduct);
             Controls.Add(comboBoxProduct);
             Controls.Add(labelGrams);
             Controls.Add(numericUpDownGrams);
-            Controls.Add(checkBoxStartDate);
+            Controls.Add(checkBoxPeriod);
+            Controls.Add(labelFrom);
             Controls.Add(dateTimePickerStart);
-            Controls.Add(checkBoxEndDate);
+            Controls.Add(labelTo);
             Controls.Add(dateTimePickerEnd);
             Controls.Add(buttonSave);
             Controls.Add(buttonCancel);

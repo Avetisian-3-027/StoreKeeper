@@ -18,13 +18,11 @@ namespace StoreKeeper.Data.Models
 
         public string? PermissionsList { get; set; }
 
-        // Тільки ID вибраної бази даних (з таблиці Databases)
         public int? SelectedDatabaseId { get; set; }
 
         [ForeignKey(nameof(SelectedDatabaseId))]
         public virtual DatabaseRecord? SelectedDatabase { get; set; }
 
-        // Методи для роботи з правами (без змін)
         public bool HasPermission(string permission)
         {
             if (IsAdmin) return true;

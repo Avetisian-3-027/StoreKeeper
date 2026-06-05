@@ -15,15 +15,12 @@ namespace StoreKeeper.Data.Models.Work
         [ForeignKey(nameof(CategoryId))]
         public virtual Category? Category { get; set; }
 
-        // Кількість на складі в кг (з точністю до 1 грама = 0.001 кг)
         [Column(TypeName = "decimal(18,3)")]
         public decimal Quantity { get; set; } = 0;
 
-        // Поточна ціна за кг
         [Column(TypeName = "decimal(18,2)")]
         public decimal PricePerKg { get; set; } = 0;
 
-        // Вартість запасів на складі = Quantity * PricePerKg (обчислюване поле в коді)
         [NotMapped]
         public decimal TotalValue => Quantity * PricePerKg;
     }

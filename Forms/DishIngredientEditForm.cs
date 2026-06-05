@@ -12,6 +12,7 @@ namespace StoreKeeper.WinForms.Forms
         private int _dishId;
         private WorkDbContext _context;
         private bool _isNew;
+        private List<Product> _allProducts;
 
         public DishIngredientEditForm(DishIngredient? ingredient, int dishId, WorkDbContext context)
         {
@@ -21,7 +22,7 @@ namespace StoreKeeper.WinForms.Forms
             _isNew = (ingredient == null);
             if (_isNew)
             {
-                _ingredient = new DishIngredient { DishId = _dishId, GramsBrutto = 1.0m }; // Початкове значення 1 грам
+                _ingredient = new DishIngredient { DishId = _dishId };
                 Text = "Новий інгредієнт";
             }
             else
@@ -35,43 +36,95 @@ namespace StoreKeeper.WinForms.Forms
 
         private void LoadProducts()
         {
-            var products = _context.Products.OrderBy(p => p.Name).ToList();
-            comboBoxProduct.DataSource = products;
+            _allProducts = _context.Products.OrderBy(p => p.Name).ToList();
+            comboBoxProduct.DataSource = _allProducts;
             comboBoxProduct.DisplayMember = "Name";
             comboBoxProduct.ValueMember = "Id";
+            comboBoxProduct.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         private void LoadData()
         {
             if (!_isNew)
                 comboBoxProduct.SelectedValue = _ingredient.ProductId;
-            // Встановлюємо значення NumericUpDown, переконуючись, що воно в межах [Minimum, Maximum]
-            decimal grams = _ingredient.GramsBrutto;
+
+            decimal grams = (decimal)_ingredient.GramsBrutto;
             if (grams < numericUpDownGrams.Minimum) grams = numericUpDownGrams.Minimum;
             if (grams > numericUpDownGrams.Maximum) grams = numericUpDownGrams.Maximum;
             numericUpDownGrams.Value = grams;
 
-            if (_ingredient.StartDate.HasValue)
+            bool hasPeriod = _ingredient.StartDate.HasValue && _ingredient.EndDate.HasValue;
+            checkBoxPeriod.Checked = hasPeriod;
+            if (hasPeriod)
             {
-                checkBoxStartDate.Checked = true;
-                dateTimePickerStart.Value = _ingredient.StartDate.Value;
+                // Встановлюємо фіксований рік 2000 для відображення
+                dateTimePickerStart.Value = new DateTime(2000, _ingredient.StartDate.Value.Month, _ingredient.StartDate.Value.Day);
+                dateTimePickerEnd.Value = new DateTime(2000, _ingredient.EndDate.Value.Month, _ingredient.EndDate.Value.Day);
             }
-            else
-            {
-                checkBoxStartDate.Checked = false;
-                dateTimePickerStart.Value = DateTime.Today;
-            }
+            UpdatePeriodVisibility();
+        }
 
-            if (_ingredient.EndDate.HasValue)
+        private void checkBoxPeriod_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePeriodVisibility();
+        }
+
+        private void UpdatePeriodVisibility()
+        {
+            bool visible = checkBoxPeriod.Checked;
+            dateTimePickerStart.Visible = visible;
+            dateTimePickerEnd.Visible = visible;
+            labelFrom.Visible = visible;
+            labelTo.Visible = visible;
+        }
+
+        private bool CheckOverlap(DateTime start, DateTime end, int? excludeId = null)
+        {
+            // Фіксуємо рік 2000 для порівняння
+            var newStart = new DateTime(2000, start.Month, start.Day);
+            var newEnd = new DateTime(2000, end.Month, end.Day);
+            if (newStart > newEnd) // період через Новий рік
             {
-                checkBoxEndDate.Checked = true;
-                dateTimePickerEnd.Value = _ingredient.EndDate.Value;
+                // розбиваємо на два: newStart..31.12 та 01.01..newEnd
+                var end1 = new DateTime(2000, 12, 31);
+                var start2 = new DateTime(2000, 1, 1);
+                return CheckOverlap(newStart, end1, excludeId) || CheckOverlap(start2, newEnd, excludeId);
             }
-            else
+            // Отримуємо всі інгредієнти для цього продукту та страви, крім поточного
+            var query = _context.DishIngredients
+                .Where(di => di.DishId == _dishId && di.ProductId == (int)comboBoxProduct.SelectedValue);
+            if (excludeId.HasValue)
+                query = query.Where(di => di.Id != excludeId.Value);
+            var existing = query.ToList();
+            foreach (var ing in existing)
             {
-                checkBoxEndDate.Checked = false;
-                dateTimePickerEnd.Value = DateTime.Today.AddYears(10);
+                if (!ing.StartDate.HasValue || !ing.EndDate.HasValue)
+                {
+                    // Глобальний інгредієнт конфліктує з будь-яким періодом
+                    MessageBox.Show("Для цього продукту вже існує глобальний інгредієнт (без періоду). Неможливо додати періодичний.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return true;
+                }
+                var ingStart = new DateTime(2000, ing.StartDate.Value.Month, ing.StartDate.Value.Day);
+                var ingEnd = new DateTime(2000, ing.EndDate.Value.Month, ing.EndDate.Value.Day);
+                if (ingStart > ingEnd) // період через Новий рік
+                {
+                    // Перевіряємо перетин з двома інтервалами
+                    if (CheckIntervalOverlap(newStart, newEnd, ingStart, new DateTime(2000, 12, 31)) ||
+                        CheckIntervalOverlap(newStart, newEnd, new DateTime(2000, 1, 1), ingEnd))
+                        return true;
+                }
+                else
+                {
+                    if (CheckIntervalOverlap(newStart, newEnd, ingStart, ingEnd))
+                        return true;
+                }
             }
+            return false;
+        }
+
+        private bool CheckIntervalOverlap(DateTime a1, DateTime a2, DateTime b1, DateTime b2)
+        {
+            return a1 <= b2 && a2 >= b1;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -83,12 +136,45 @@ namespace StoreKeeper.WinForms.Forms
             }
             _ingredient.ProductId = (int)comboBoxProduct.SelectedValue;
             _ingredient.GramsBrutto = numericUpDownGrams.Value;
-            _ingredient.StartDate = checkBoxStartDate.Checked ? dateTimePickerStart.Value.Date : (DateTime?)null;
-            _ingredient.EndDate = checkBoxEndDate.Checked ? dateTimePickerEnd.Value.Date : (DateTime?)null;
+
+            if (checkBoxPeriod.Checked)
+            {
+                DateTime start = dateTimePickerStart.Value;
+                DateTime end = dateTimePickerEnd.Value;
+                if (start > end)
+                {
+                    MessageBox.Show("Дата початку не може бути пізнішою за дату закінчення.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                // Фіксуємо рік 2000 для зберігання
+                _ingredient.StartDate = new DateTime(2000, start.Month, start.Day);
+                _ingredient.EndDate = new DateTime(2000, end.Month, end.Day);
+                // Перевіряємо перетин з іншими інгредієнтами
+                if (CheckOverlap(start, end, _isNew ? null : _ingredient.Id))
+                {
+                    MessageBox.Show("Цей період перетинається з вже існуючим періодом для того ж продукту. Оберіть інші дати.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                _ingredient.StartDate = null;
+                _ingredient.EndDate = null;
+                // Перевіряємо, чи вже існує глобальний для цього продукту
+                var globalExists = _context.DishIngredients
+                    .Any(di => di.DishId == _dishId && di.ProductId == _ingredient.ProductId && di.Id != _ingredient.Id &&
+                               !di.StartDate.HasValue && !di.EndDate.HasValue);
+                if (globalExists)
+                {
+                    MessageBox.Show("Для цього продукту вже існує глобальний інгредієнт.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
 
             if (_isNew)
                 _context.DishIngredients.Add(_ingredient);
             _context.SaveChanges();
+
             DialogResult = DialogResult.OK;
             Close();
         }

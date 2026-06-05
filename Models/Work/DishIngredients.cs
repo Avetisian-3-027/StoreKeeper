@@ -17,24 +17,38 @@ namespace StoreKeeper.Data.Models.Work
         [ForeignKey(nameof(ProductId))]
         public virtual Product? Product { get; set; }
 
-        // Початок дії (включно). Якщо null – означає "від початку часів"
+        // Початок дії (зберігається дата, але використовується тільки місяць/день, рік фіксований 2000)
         public DateTime? StartDate { get; set; }
 
-        // Кінець дії (включно). Якщо null – означає "до безкінечності"
+        // Кінець дії (рік теж 2000)
         public DateTime? EndDate { get; set; }
 
-        // Грами брутто на одну порцію (з точністю до 0.01 г, але на практиці використовуємо 0.1 г)
+        // Грами брутто на одну порцію
         [Column(TypeName = "decimal(8,2)")]
         public decimal GramsBrutto { get; set; }
 
-        // Метод перевірки, чи діє запис на задану дату
-        public bool IsActiveOnDate(DateTime date)
+        // Метод перевірки, чи діє інгредієнт на задану дату (з урахуванням тільки дня/місяця)
+        public bool IsDateInRange(DateTime date)
         {
-            if (StartDate.HasValue && date.Date < StartDate.Value.Date)
-                return false;
-            if (EndDate.HasValue && date.Date > EndDate.Value.Date)
-                return false;
-            return true;
+            // Якщо період не задано – глобальний
+            if (!StartDate.HasValue || !EndDate.HasValue)
+                return true;
+
+            // Приводимо дату до фіксованого року 2000
+            var target = new DateTime(2000, date.Month, date.Day);
+            var start = new DateTime(2000, StartDate.Value.Month, StartDate.Value.Day);
+            var end = new DateTime(2000, EndDate.Value.Month, EndDate.Value.Day);
+
+            if (start <= end)
+            {
+                // Простий інтервал
+                return target >= start && target <= end;
+            }
+            else
+            {
+                // Інтервал через Новий рік (наприклад, 20.12 – 10.01)
+                return target >= start || target <= end;
+            }
         }
     }
 }
