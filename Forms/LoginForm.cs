@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Windows.Forms;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using StoreKeeper.Data.DbContext;
 using StoreKeeper.Data.Models;
 using StoreKeeper.Helpers;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace StoreKeeper.WinForms.Forms
 {
@@ -12,7 +12,7 @@ namespace StoreKeeper.WinForms.Forms
     {
         private AppDbContext _context;
         private User? _selectedUser;
-        private const string ConnectionString = "Data Source=users.list";
+        private const string ConnectionString = "Data Source=data.list";
 
         public LoginForm()
         {
@@ -28,11 +28,13 @@ namespace StoreKeeper.WinForms.Forms
             _context = new AppDbContext(options);
             AppDbContext.InitializeDatabase(_context);
 
-            var users = _context.Users.OrderBy(u => u.Username).ToList();
+            var users = _context.Users
+                .Include(u => u.SelectedDatabase)
+                .OrderBy(u => u.Username)
+                .ToList();
             comboBoxUsers.DataSource = users;
             comboBoxUsers.DisplayMember = "Username";
             comboBoxUsers.ValueMember = "Id";
-
             if (users.Count > 0)
                 comboBoxUsers.SelectedIndex = 0;
         }
@@ -51,7 +53,6 @@ namespace StoreKeeper.WinForms.Forms
                 return;
             }
 
-            // Перевірка пароля
             if (!string.IsNullOrEmpty(_selectedUser.PasswordHash))
             {
                 string inputPassword = textBoxPassword.Text;
@@ -64,14 +65,10 @@ namespace StoreKeeper.WinForms.Forms
             }
             else
             {
-                // Якщо немає пароля – пропонуємо встановити (тільки для адміна)
                 if (_selectedUser.IsAdmin)
                 {
-                    var result = MessageBox.Show(
-                        "У профілю немає пароля. Бажаєте встановити пароль зараз?",
-                        "Безпека",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question);
+                    var result = MessageBox.Show("У профілю немає пароля. Встановити зараз?", "Безпека",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
                         using (var pwdForm = new SetPasswordForm(_selectedUser, hash =>
@@ -82,18 +79,13 @@ namespace StoreKeeper.WinForms.Forms
                         {
                             if (pwdForm.ShowDialog() == DialogResult.OK)
                             {
-                                MessageBox.Show("Пароль встановлено. Тепер увійдіть знову.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                LoadUsers(); // оновити список
+                                MessageBox.Show("Пароль встановлено. Увійдіть знову.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                LoadUsers();
                                 comboBoxUsers.SelectedValue = _selectedUser.Id;
                                 return;
                             }
-                            else
-                                return; // не входимо без пароля
+                            else return;
                         }
-                    }
-                    else
-                    {
-                        // Дозволяємо вхід без пароля для адміна, якщо він відмовився
                     }
                 }
                 else
@@ -103,9 +95,58 @@ namespace StoreKeeper.WinForms.Forms
                 }
             }
 
-            this.Hide();
-            var mainForm = new MainForm(_selectedUser, _context);
-            mainForm.FormClosed += (s, args) => this.Close();
+            string workConnectionString = null;
+            if (_selectedUser.SelectedDatabaseId.HasValue && _selectedUser.SelectedDatabase != null)
+            {
+                try
+                {
+                    workConnectionString = _selectedUser.SelectedDatabase.GetConnectionString();
+                    using (var testConn = new Microsoft.Data.Sqlite.SqliteConnection(workConnectionString))
+                    {
+                        testConn.Open();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (_selectedUser.IsAdmin)
+                    {
+                        MessageBox.Show($"Помилка підключення до БД:\n{ex.Message}\nВи можете увійти без робочої бази.",
+                            "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        workConnectionString = null;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Не вдалося підключитися до бази даних.\nПомилка: {ex.Message}",
+                            "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (!_selectedUser.IsAdmin)
+                {
+                    MessageBox.Show("Користувачеві не призначено базу даних. Зверніться до адміністратора.",
+                        "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show("У вас не вибрана база даних. Ви можете увійти, але функції роботи з даними будуть недоступні.",
+                        "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+
+            this.Hide(); // ховаємо форму логіну
+            var mainForm = new MainForm(_selectedUser, _context, workConnectionString);
+            // Коли MainForm закривається, ми просто показуємо LoginForm знову
+            mainForm.FormClosed += (s, args) =>
+            {
+                this.Show(); // показуємо форму логіну
+                             // Оновлюємо список користувачів (на випадок, якщо адмін щось змінив)
+                LoadUsers();
+                textBoxPassword.Text = "";
+            };
             mainForm.Show();
         }
     }

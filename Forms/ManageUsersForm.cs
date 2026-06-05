@@ -25,57 +25,45 @@ namespace StoreKeeper.WinForms.Forms
         private void LoadUsers()
         {
             _context.ChangeTracker.Clear();
-            var users = _context.Users.OrderBy(u => u.Username).ToList();
-            dataGridViewUsers.DataSource = null;
-            dataGridViewUsers.DataSource = users;
+            var users = _context.Users
+                .Include(u => u.SelectedDatabase)
+                .OrderBy(u => u.Username)
+                .ToList();
 
-            // Приховуємо всі колонки, які не потрібні
-            dataGridViewUsers.Columns["Id"].Visible = false;
-            dataGridViewUsers.Columns["PasswordHash"].Visible = false;
-            dataGridViewUsers.Columns["PermissionsList"].Visible = false;
-            dataGridViewUsers.Columns["DatabaseConfigJson"].Visible = false;
-            dataGridViewUsers.Columns["IsAdmin"].Visible = false;
-            dataGridViewUsers.Columns["DatabaseConfig"].Visible = false; // Додано!
+            // Фіксуємо колонки
+            dataGridViewUsers.AutoGenerateColumns = false;
+            dataGridViewUsers.Columns.Clear();
 
-            // Налаштовуємо колонку Username
-            dataGridViewUsers.Columns["Username"].HeaderText = "Ім'я користувача";
-            dataGridViewUsers.Columns["Username"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            // Колонка "Ім'я користувача"
+            dataGridViewUsers.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Username",
+                HeaderText = "Ім'я користувача",
+                DataPropertyName = "Username",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
+                ReadOnly = true
+            });
 
-            // Видаляємо старі кастомні колонки, якщо вони є
-            if (dataGridViewUsers.Columns["RulesColumn"] != null)
-                dataGridViewUsers.Columns.Remove("RulesColumn");
-            if (dataGridViewUsers.Columns["ProviderColumn"] != null)
-                dataGridViewUsers.Columns.Remove("ProviderColumn");
-            if (dataGridViewUsers.Columns["ConnectionStringColumn"] != null)
-                dataGridViewUsers.Columns.Remove("ConnectionStringColumn");
+            // Колонка "База даних" (заповнюється через CellFormatting)
+            dataGridViewUsers.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "DatabaseColumn",
+                HeaderText = "База даних",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                ReadOnly = true
+            });
 
-            // Додаємо нові колонки
-            var rulesColumn = new DataGridViewTextBoxColumn
+            // Колонка "Правила" (заповнюється через CellFormatting)
+            dataGridViewUsers.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "RulesColumn",
                 HeaderText = "Правила",
-                ReadOnly = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            };
-            dataGridViewUsers.Columns.Add(rulesColumn);
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                ReadOnly = true
+            });
 
-            var providerColumn = new DataGridViewTextBoxColumn
-            {
-                Name = "ProviderColumn",
-                HeaderText = "Тип БД",
-                ReadOnly = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-            };
-            dataGridViewUsers.Columns.Add(providerColumn);
-
-            var connStringColumn = new DataGridViewTextBoxColumn
-            {
-                Name = "ConnectionStringColumn",
-                HeaderText = "Рядок підключення",
-                ReadOnly = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            };
-            dataGridViewUsers.Columns.Add(connStringColumn);
+            dataGridViewUsers.DataSource = users;
+            dataGridViewUsers.AllowUserToOrderColumns = false;
         }
 
         private void dataGridViewUsers_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -84,7 +72,12 @@ namespace StoreKeeper.WinForms.Forms
             var user = dataGridViewUsers.Rows[e.RowIndex].DataBoundItem as User;
             if (user == null) return;
 
-            if (dataGridViewUsers.Columns[e.ColumnIndex].Name == "RulesColumn")
+            if (dataGridViewUsers.Columns[e.ColumnIndex].Name == "DatabaseColumn")
+            {
+                e.Value = user.SelectedDatabase?.Name ?? "(не вибрано)";
+                e.FormattingApplied = true;
+            }
+            else if (dataGridViewUsers.Columns[e.ColumnIndex].Name == "RulesColumn")
             {
                 if (user.IsAdmin)
                     e.Value = "Адміністратор";
@@ -102,31 +95,12 @@ namespace StoreKeeper.WinForms.Forms
                 }
                 e.FormattingApplied = true;
             }
-            else if (dataGridViewUsers.Columns[e.ColumnIndex].Name == "ProviderColumn")
-            {
-                string provider = user.DatabaseConfig.Provider;
-                if (provider == "MySQL" || provider == "PostgreSQL")
-                    e.Value = $"{provider} (в розробці)";
-                else
-                    e.Value = provider;
-                e.FormattingApplied = true;
-            }
-            else if (dataGridViewUsers.Columns[e.ColumnIndex].Name == "ConnectionStringColumn")
-            {
-                var config = user.DatabaseConfig;
-                if (config.Provider == "SQLite")
-                    e.Value = config.FolderPath;
-                else
-                    e.Value = $"{config.Server}:{config.Port}/{config.DatabaseName} (користувач: {config.Username})";
-                e.FormattingApplied = true;
-            }
         }
-
 
         private void BackupDatabase()
         {
-            string dbFile = "users.list";
-            string backupFile = "users.list.bak";
+            string dbFile = "data.list";
+            string backupFile = "data.list.bak";
             if (File.Exists(dbFile))
             {
                 try
@@ -166,7 +140,6 @@ namespace StoreKeeper.WinForms.Forms
             }
         }
 
-        
         private void buttonDelete_Click(object sender, EventArgs e)
         {
             if (dataGridViewUsers.CurrentRow == null) return;
