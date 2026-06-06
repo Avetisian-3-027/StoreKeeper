@@ -289,52 +289,64 @@ namespace StoreKeeper.WinForms.Forms
             if (_invoiceType == 1)
                 invoice.Supplier = textBoxSupplier.Text.Trim();
 
-            _context.Invoices.Add(invoice);
-            _context.SaveChanges();
-
-            foreach (var item in _items)
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                var invoiceItem = new InvoiceItem
+                try
                 {
-                    InvoiceId = invoice.Id,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    PricePerKg = item.PricePerKg
-                };
-                _context.InvoiceItems.Add(invoiceItem);
-
-                var product = _context.Products.Find(item.ProductId);
-                if (product != null)
-                {
-                    if (_invoiceType == 1)
+                    if (_invoiceType == 2)
                     {
-                        product.Quantity += item.Quantity;
-                        product.PricePerKg = item.PricePerKg;
-                    }
-                    else
-                    {
-                        if (product.Quantity < item.Quantity)
+                        foreach (var item in _items)
                         {
-                            MessageBox.Show($"Недостатньо товару '{product.Name}' на складі. Доступно: {product.Quantity:N3} кг", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            _context.Invoices.Remove(invoice);
-                            _context.SaveChanges();
-                            return;
+                            var product = _context.Products.Find(item.ProductId);
+                            if (product.Quantity < item.Quantity)
+                                throw new Exception($"Недостатньо товару '{product.Name}' на складі. Доступно: {product.Quantity:N3} кг");
                         }
-                        product.Quantity -= item.Quantity;
                     }
+
+                    _context.Invoices.Add(invoice);
+
+                    foreach (var item in _items)
+                    {
+                        var invoiceItem = new InvoiceItem
+                        {
+                            InvoiceId = invoice.Id, 
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            PricePerKg = item.PricePerKg
+                        };
+                        _context.InvoiceItems.Add(invoiceItem);
+
+                        var product = _context.Products.Find(item.ProductId);
+                        if (_invoiceType == 1)
+                        {
+                            product.Quantity += item.Quantity;
+                            product.PricePerKg = item.PricePerKg;
+                        }
+                        else
+                        {
+                            product.Quantity -= item.Quantity;
+                        }
+                    }
+
+                    _context.SaveChanges();
+                    transaction.Commit();
+
+                    AuditService.Log(_context, _currentUser.Username, "CreateInvoice",
+                        $"Створено накладну {(_invoiceType == 1 ? "прихідну" : "видаткову")} №{number} на суму {_items.Sum(i => i.Total):N2} грн",
+                        invoice.Id,
+                        null,
+                        new { Number = number, Date = dateTimePickerDate.Value, ItemsCount = _items.Count, TotalSum = _items.Sum(i => i.Total) }
+                    );
+
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.Show($"Помилка при збереженні накладної: {ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            _context.SaveChanges();
-
-            AuditService.Log(_context, _currentUser.Username, "CreateInvoice",
-                $"Створено накладну {(_invoiceType == 1 ? "прихідну" : "видаткову")} №{number} на суму {_items.Sum(i => i.Total):N2} грн",
-                invoice.Id,
-                null,
-                new { Number = number, Date = dateTimePickerDate.Value, ItemsCount = _items.Count, TotalSum = _items.Sum(i => i.Total) }
-            );
-
-            DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
