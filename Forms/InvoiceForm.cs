@@ -293,6 +293,7 @@ namespace StoreKeeper.WinForms.Forms
             {
                 try
                 {
+                    // Перевірка залишків для видаткової
                     if (_invoiceType == 2)
                     {
                         foreach (var item in _items)
@@ -304,12 +305,13 @@ namespace StoreKeeper.WinForms.Forms
                     }
 
                     _context.Invoices.Add(invoice);
+                    _context.SaveChanges(); // отримуємо Id
 
                     foreach (var item in _items)
                     {
                         var invoiceItem = new InvoiceItem
                         {
-                            InvoiceId = invoice.Id, 
+                            InvoiceId = invoice.Id,
                             ProductId = item.ProductId,
                             Quantity = item.Quantity,
                             PricePerKg = item.PricePerKg
@@ -330,23 +332,58 @@ namespace StoreKeeper.WinForms.Forms
 
                     _context.SaveChanges();
                     transaction.Commit();
-
-                    AuditService.Log(_context, _currentUser.Username, "CreateInvoice",
-                        $"Створено накладну {(_invoiceType == 1 ? "прихідну" : "видаткову")} №{number} на суму {_items.Sum(i => i.Total):N2} грн",
-                        invoice.Id,
-                        null,
-                        new { Number = number, Date = dateTimePickerDate.Value, ItemsCount = _items.Count, TotalSum = _items.Sum(i => i.Total) }
-                    );
-
-                    DialogResult = DialogResult.OK;
-                    Close();
                 }
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    MessageBox.Show($"Помилка при збереженні накладної: {ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _context.ChangeTracker.Clear(); // очищаємо кеш, щоб не показував фальшиві дані
+
+                    // Збираємо повний текст помилки
+                    string errorMessage = ex.Message;
+                    if (ex.InnerException != null)
+                        errorMessage += $"\n\nДеталі (InnerException):\n{ex.InnerException.Message}";
+
+                    // Логуємо помилку в журнал подій (щоб було видно в AuditLogForm)
+                    try
+                    {
+                        var errorLog = new AuditLog
+                        {
+                            Timestamp = DateTime.Now,
+                            Username = _currentUser.Username,
+                            Action = "ERROR_SaveInvoice",
+                            Details = $"Помилка при збереженні накладної №{number}:\n{errorMessage}",
+                            InvoiceId = null
+                        };
+                        _context.AuditLogs.Add(errorLog);
+                        _context.SaveChanges();
+                    }
+                    catch { /* Ігноруємо помилки запису логу, щоб не заважати головному повідомленню */ }
+
+                    // Показуємо користувачеві деталі
+                    MessageBox.Show($"Накладну НЕ збережено!\n\nПричина:\n{errorMessage}",
+                        "Помилка збереження", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
             }
+
+            // Логування успішної операції
+            try
+            {
+                AuditService.Log(_context, _currentUser.Username, "CreateInvoice",
+                    $"Створено накладну {(_invoiceType == 1 ? "прихідну" : "видаткову")} №{number} на суму {_items.Sum(i => i.Total):N2} грн",
+                    invoice.Id,
+                    null,
+                    new { Number = number, Date = dateTimePickerDate.Value, ItemsCount = _items.Count, TotalSum = _items.Sum(i => i.Total) }
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Накладну збережено, але не вдалося записати в журнал подій:\n{ex.Message}",
+                    "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)

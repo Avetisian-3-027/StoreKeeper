@@ -7,7 +7,13 @@ namespace StoreKeeper.WinForms.Services
 {
     public static class AuditService
     {
-        public static void Log(WorkDbContext context, string username, string action, string details = null, int? invoiceId = null, object oldValues = null, object newValues = null)
+        public static void Log(WorkDbContext context, 
+            string username, 
+            string action, 
+            string details = null, 
+            int? invoiceId = null, 
+            object oldValues = null,
+            object newValues = null)
         {
             var log = new AuditLog
             {

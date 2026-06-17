@@ -2,9 +2,6 @@
 using StoreKeeper.Data.DbContext;
 using StoreKeeper.Data.Models;
 using StoreKeeper.Helpers;
-using System;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace StoreKeeper.WinForms.Forms
 {
@@ -137,13 +134,11 @@ namespace StoreKeeper.WinForms.Forms
                 }
             }
 
-            this.Hide(); // ховаємо форму логіну
+            this.Hide(); 
             var mainForm = new MainForm(_selectedUser, _context, workConnectionString);
-            // Коли MainForm закривається, ми просто показуємо LoginForm знову
             mainForm.FormClosed += (s, args) =>
             {
-                this.Show(); // показуємо форму логіну
-                             // Оновлюємо список користувачів (на випадок, якщо адмін щось змінив)
+                this.Show(); 
                 LoadUsers();
                 textBoxPassword.Text = "";
             };
